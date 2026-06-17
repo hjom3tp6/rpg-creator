@@ -22,10 +22,8 @@ it just runs.
 ## Install
 
 ```shell
-# 1. Add this marketplace (use the local path, or your git URL once pushed)
-/plugin marketplace add /Users/markcui/mark_doc/workspace-ai/rpg-creator
-#   …or, after pushing to GitHub:
-/plugin marketplace add <your-github-user>/rpg-creator
+# 1. Add this marketplace
+/plugin marketplace add hjom3tp6/rpg-creator
 
 # 2. Install the plugin
 /plugin install rpg-creator@markcui-plugins
