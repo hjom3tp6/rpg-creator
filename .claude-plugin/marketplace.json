@@ -1,0 +1,14 @@
+{
+  "name": "markcui-plugins",
+  "owner": {
+    "name": "Mark Cui"
+  },
+  "description": "Mark Cui's personal Claude Code plugin catalog.",
+  "plugins": [
+    {
+      "name": "rpg-creator",
+      "source": "./",
+      "description": "Author + compile self-contained, playable narrative RPG skills (baked games)."
+    }
+  ]
+}

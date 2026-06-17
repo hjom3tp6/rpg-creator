@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "game_id": "",
+    "game_title": "",
+    "created": "",
+    "last_played": "",
+    "schema_version": 3
+  },
+  "player": {
+    "name": "",
+    "description": "",
+    "persona_file": "characters/player.md"
+  },
+  "scene": {
+    "location": "",
+    "present_characters": [],
+    "summary": ""
+  },
+  "clock": {
+    "day": 1,
+    "phase": "morning",
+    "deadlines": []
+  },
+  "goals": {
+    "_comment": "GM-FACING ONLY — never shown to the player as a HUD/quest log. The GM keeps these current and makes sure each scene's hooks and options point at the active short-term goal, surfaced through fiction (an NPC asks, a deadline looms), not menus. Gives the player direction without breaking immersion.",
+    "short": [],
+    "mid": [],
+    "long": []
+  },
+  "director": {
+    "tone": [],
+    "notes": ""
+  },
+  "coaching": {
+    "enabled": false,
+    "frequency": "normal",
+    "explicit": "off",
+    "show_affinity_numbers": false
+  },
+  "affinity": {},
+  "relationships": {},
+  "flags": {},
+  "inventory": [],
+  "party": [],
+  "drift": {
+    "_comment": "Only present if the 'drift' module is active. Hidden world-reroute engine; see references/drift.md.",
+    "pressure": 0,
+    "threshold": 60,
+    "last_check_day": 1,
+    "ledger": [],
+    "pending_seeds": []
+  },
+  "_modules": {
+    "comment": "Module-specific state blocks go here or at top level, per the game. E.g. the magic-potency module uses a 'spirit_tongue' block; a stats module might use 'stats'. The seed (the game's own state.seed.json) sets initial values."
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "rpg-creator",
+  "description": "Author a complete narrative RPG and compile it into its own self-contained, directly-playable Claude Code skill — a \"baked game\" with its own slash command. Interview-driven design of world, cast, lore, story and mechanics; SillyTavern-style 主角/配角 character cards; and a bundled save/recap engine, all distilled so each game runs with no generic engine loaded at play time.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mark Cui"
+  },
+  "keywords": [
+    "rpg",
+    "game",
+    "narrative",
+    "interactive-fiction",
+    "worldbuilding",
+    "skill-authoring"
+  ]
+}
