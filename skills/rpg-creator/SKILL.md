@@ -101,15 +101,56 @@ copied from `--from`. It never overwrites an existing baked skill unless you pas
   **`references/compile.md` is the exact spec** for both files (what to inline, what to reference,
   what to drop). Read it before writing them.
 
-### 4. Validate & hand off — `references/compile.md` (checklist) + `references/design.md` (gates)
-Run the baked-skill sanity checks (every path the SKILL references resolves; `state.seed.json` parses;
-`load.py --game <id>` works; no generic-engine assumptions leaked into the loop) plus the design gates.
-Then tell the user the game is ready and they can play it by typing **`/<id>`** (New Game on first run).
+### 4. Complexity review & tuning — `scripts/scorecard.py` + `references/design.md`
+**Settle the game's final size/shape *with the user* before you validate** — so validation runs against
+frozen content, not something you're about to rip up. Get the structural counts from the script (don't
+hand-count them):
 
-### 5. Complexity review & tuning — `references/design.md`
-Show a structural scorecard, let the user dial complexity with AskUserQuestion, apply changes, and
-**re-review the whole story for coherence** (consistency, foreshadowing, hooks) after every edit, then
-re-distill `mechanics.md`/`SKILL.md` if the changes touched mechanics or the opening. Loop until ship.
+```bash
+python3 "$SKILL/scripts/scorecard.py" --id <id>
+```
+
+It reports cast size & roles, romanceable count, lore/hidden-secret counts, acts/beats/clocks, and the
+measurable ensemble signals (distinct sub-casts, who has a solo beat, whether full-cast is reserved for
+the climax, rotation-floor met). **Read those numbers, then judge** — present a one-line health read and
+the thinnest axis, let the user dial complexity with AskUserQuestion, apply changes, and **re-review the
+whole story for coherence** (consistency, foreshadowing, hooks) after every edit, then re-distill
+`mechanics.md`/`SKILL.md` if the changes touched mechanics or the opening. Re-run `scorecard.py` after
+each edit to confirm the structure moved the way you intended. Loop until the user is happy with the shape.
+
+### 5. Validate — `scripts/validate.py` (deterministic) + `references/design.md` (gates)
+Now that the content is frozen, run the **deterministic** half first — don't hand-check it:
+
+```bash
+python3 "$SKILL/scripts/validate.py" --id <id>
+```
+
+It mechanically checks the whole floor (required files; no leftover `{{placeholders}}`;
+`state.seed.json` parses & `meta.game_id == <id>`; opening cards exist; hidden `public:no` lore has a
+body file; every world/characters/story path the SKILL/mechanics reference resolves; frontmatter
+`name == <id>` with a description; the engine is bundled; `load.py --game <id>` actually runs) and
+exits non-zero on any **FAIL**. **Fix every FAIL and re-run until it exits 0;** then eyeball the
+**WARN**s (e.g. non-ASCII that must be a lore keyword or a `word (中文)` gloss, not stray prose).
+
+A green `validate.py` is the *floor, not the ceiling* — it can't judge quality. With it passing, run
+the **`references/design.md` §4 judgment gates by hand**: ensemble-depth (real rotation, solo time,
+full-cast only at climax), character-legibility, heroine-beauty. The checklist in `references/compile.md`
+maps each item to whether validate.py covers it or you must judge it.
+
+### 6. Engineering polish before ship — delegate to `skill-creator`
+With the game's **content frozen and gates green**, do a final skill-*engineering* pass: spawn a subagent
+that invokes the **`skill-creator`** skill to polish the baked skill *as a Claude skill* — SKILL.md
+frontmatter, the `description` so `/<id>` triggers crisply on this game (and stays quiet otherwise), and
+overall skill structure/conventions.
+- **★ Hard boundary — skill-creator may touch ONLY the skill-engineering surface.** It must **not** alter
+  game content (`world/ characters/ story/`) or the *meaning* of `mechanics.md`, the language policy, the
+  active-module list, or the opening. Those already passed the gates; rewriting them would silently break
+  the coherence you just verified. Hand the subagent this boundary explicitly.
+- **★ Regression check after the polish:** `/<id>` still triggers, `load.py --game <id>` still runs, and
+  the SKILL's hardcoded invariants (id / language policy / module list / opening / resume command `/<id>`)
+  are unchanged. If the polish moved any of them, revert that part.
+
+Then tell the user the game is ready — they play it by typing **`/<id>`** (New Game on first run).
 
 ## References (load on demand)
 | File | Load when |

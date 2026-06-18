@@ -11,3 +11,5 @@ __pycache__/
 
 # Games & saves are generated into the USER's project, not this repo — never commit them here.
 saves/
+# Local project dir: baked test games (.claude/skills/<id>/) and local settings — never part of the plugin source.
+.claude/

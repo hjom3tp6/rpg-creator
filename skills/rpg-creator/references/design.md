@@ -144,11 +144,13 @@ A game can pass every gate and still be the *wrong size* — too thin to stay in
 it loses its throughline. Surface the structure and let the user dial it; then re-check nothing broke.
 Loop: present → ask → adjust → re-review → repeat until the user is happy.
 
-1. **Structural scorecard** (counts, not spoilers): chapters/acts & beats; climaxes/peaks (and which is
-   *the* final one); characters (named/romanceable) and whether the antagonist is a person or an
-   institution; factions/powers; hidden lore/secrets (how many `public: no`); ensemble-depth summary
-   (distinct sub-casts; does everyone get solo time). Add a one-line health read and flag the *thinnest*
-   axis.
+1. **Structural scorecard** (counts, not spoilers). Get the numbers deterministically — don't
+   hand-count: `python3 "$SKILL/scripts/scorecard.py" --id <id>` reports chapters/acts & beats;
+   characters (named/romanceable) and the role tally; hidden lore/secrets (how many `public: no`); and
+   the ensemble signals (distinct sub-casts, who gets a solo beat, full-cast-only-at-climax,
+   rotation-floor met). The script counts; **you** judge — add the one-line health read, flag the
+   *thinnest* axis, and fill the few things it can't infer from prose (climaxes/peaks and which is *the*
+   final one; whether the antagonist is a person or an institution; factions/powers).
 2. **Ask how to tune** — use **AskUserQuestion** with concrete levers (multiSelect when several apply):
    add/remove a faction or third-party power; add/remove a character or subplot; add/remove a climax or
    mid-act twist; deepen or simplify the hidden-lore web; lengthen/shorten the arc; "leave as-is — ship

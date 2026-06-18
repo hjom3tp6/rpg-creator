@@ -94,20 +94,35 @@ If a complexity-tuning edit (`design.md` §5) changes the **opening**, the **act
 rulings/craft → `mechanics.md`. Content-only edits (a new lore, a tweaked card) need neither.
 
 ## Baked-skill checklist (run before hand-off)
-- `name:` in SKILL.md == the folder id; `description` is game-specific and includes resume phrasings.
-- The loop references **nothing outside the game folder** for a normal turn; only
-  `$SKILL/engine/references/god-mode.md` as the one edge-case fallback. No `games/ACTIVE`, no
-  `language_policy:`-to-honor, no module on/off branching, no meta-command table left behind —
-  the only OOC command is `[god]`.
-- Every path the SKILL names resolves: `world/`, `characters/`, `story/`, `state.seed.json` exist
-  under the skill dir; the bundled `engine/scripts/*.py` exist (compile.py auto-copies them; if missing,
-  run `compile.py --id <id> --update-engine`).
-- `state.seed.json` parses (`python3 -c "import json,sys;json.load(open('.claude/skills/<id>/state.seed.json'))"`)
-  and its `meta.game_id` == `<id>`; opening `present_characters` all have cards.
-- `python3 .claude/skills/<id>/engine/scripts/load.py --game <id>` runs (prints `no_save` for a fresh
-  game, or the existing state for a migration) — confirms the bundled engine works.
-- `mechanics.md` covers every module in the SKILL's active list and the universal turn-craft, and is
-  not a verbatim copy of the sources.
-- Run the `design.md` §4 gates (ensemble-depth, legibility, beauty, authoring-language).
+
+**First, run the deterministic gate — don't hand-check what a script checks better:**
+```bash
+python3 "$SKILL/scripts/validate.py" --id <id>
+```
+It must exit 0 (no FAIL). It covers, mechanically: required files present; **no leftover
+`{{placeholders}}`**; `state.seed.json` parses and `meta.game_id == <id>`; opening `present_characters`
+all have cards; `player.persona_file` resolves; every `public:no` lore row has its `world/lore/<id>.md`
+body; every `world/ characters/ story/` path the SKILL/mechanics name resolves; frontmatter `name == <id>`
+with a non-empty `description`; the full engine is bundled (`compile.py --id <id> --update-engine` if
+not); and the bundled `load.py --game <id>` actually runs. **Fix every FAIL, re-run to a clean exit 0,
+then read each WARN** (notably `authoring-language`: confirm every non-ASCII hit is a lore keyword or a
+`word (中文)` gloss — rewrite anything else to English).
+
+**Then judge by hand what validate.py cannot** (these are quality calls, not mechanics):
+- The loop references **nothing outside the game folder** for a normal turn beyond
+  `$SKILL/engine/references/god-mode.md` (the one edge-case fallback). No `games/ACTIVE`, no
+  `language_policy:`-to-honor, no module on/off branching, no meta-command table left behind — the only
+  OOC command is `[god]`. (validate.py checks that *named paths resolve*, not that the loop is free of
+  generic-engine assumptions — that read is yours.)
+- `mechanics.md` covers every module in the SKILL's active list and the universal turn-craft, and is a
+  genuine **distillation, not a verbatim copy** of the sources.
+- Run the `design.md` §4 judgment gates: ensemble-depth (real rotation, solo time, full-cast only at the
+  climax), character-legibility, heroine-beauty. (`authoring-language` is half-automated: validate.py
+  surfaces the candidate lines as WARNs; you decide which bucket each falls in.)
+
+- **Only once validate.py exits 0 AND the judgment gates pass**, proceed to the SKILL §6 engineering-polish step: a
+  `skill-creator` subagent polishes the baked skill's *engineering surface only* (frontmatter,
+  `description`/trigger, structure) — never the frozen game content or `mechanics.md`'s meaning — then a
+  regression check confirms `/<id>`, `load.py`, and the SKILL's hardcoded invariants still hold.
 - Tell the user: play it by typing **`/<id>`** (first run = New Game). To retire it, just delete
   `.claude/skills/<id>/` (and optionally `saves/<id>/`).
