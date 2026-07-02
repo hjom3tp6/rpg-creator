@@ -11,8 +11,11 @@ content. `compile.py` lays down the skeleton; you bring it to life.
 Pin down enough to make the world feel intentional. Batch the questions; offer suggestions so the
 user can just say "yes":
 - **Premise & hook:** who is the player, where, what's the core conflict/goal, the inciting moment?
-- **Tone & genre:** the mood tags (cyberpunk noir, cozy mystery, dark fantasy, wuxia, school romcom).
-  What should it *feel* like to play?
+- **Tone & genre:** the mood tags. **Default suggestion — a Dungeons & Dragons-style high/heroic
+  fantasy:** a sword-and-sorcery world of adventuring parties, dungeons, dragons and other monsters,
+  clerics and wizards, taverns and guilds, ancient ruins and looming dark lords. Lead with this D&D
+  flavor when you propose options, then offer the other mood tags as alternatives (cyberpunk noir,
+  cozy mystery, dark fantasy, wuxia, school romcom). What should it *feel* like to play?
 - **Language policy:** narration / dialogue / system languages, and whether the in-character
   **coaching** layer is on. (The bundled "Spirit-Tongue" uses Chinese narration + English dialogue for
   English practice — ask if they want a language-learning angle or a single language throughout.) This
@@ -43,7 +46,9 @@ honor them; if they skip / say "you decide", proceed to design it yourself from 
 Never block on it.
 
 If the user is vague or says "just make something cool", **propose** a concrete, opinionated concept
-and confirm it in one line before building. A strong specific world beats committee mush.
+and confirm it in one line before building — **default to a Dungeons & Dragons-style high-fantasy
+world** (adventuring party, dungeons, dragons, magic and monsters) unless the user has hinted at
+another genre. A strong specific world beats committee mush.
 
 ## 2. Scaffold
 Pick a kebab-case **id** (= skill folder **and** slash command). Run `compile.py --id <id>` (fresh) or
