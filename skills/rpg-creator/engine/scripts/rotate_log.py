@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep saves/session-log.md from growing without bound.
+"""Keep saves/<game>/session-log.md from growing without bound.
 
 The session log holds the recent turns verbatim (a rolling window). When
 it gets long, the GM should summarize the oldest part into journal.md
@@ -8,19 +8,19 @@ deterministic part: deciding WHEN to rotate and WHICH lines to trim.
 
 The actual summarizing is the GM's job (it needs judgment), so the flow is:
 
-  1. python3 rotate_log.py --check
+  1. python3 rotate_log.py --game ID --check
        -> {"needs_rotation": true, "total_lines": 320, "trim_lines": 200,
            "oldest_block": "...first 200 lines..."}
      If needs_rotation is false, do nothing.
 
-  2. GM reads oldest_block, writes a concise summary into saves/journal.md
+  2. GM reads oldest_block, writes a concise summary into saves/<game>/journal.md
 
-  3. python3 rotate_log.py --trim 200
+  3. python3 rotate_log.py --game ID --trim 200
        -> removes the first 200 lines from session-log.md
 
 Usage:
-    python3 rotate_log.py --check [--root DIR] [--threshold N] [--keep N]
-    python3 rotate_log.py --trim N [--root DIR]
+    python3 rotate_log.py --game ID --check [--root DIR] [--threshold N] [--keep N]
+    python3 rotate_log.py --game ID --trim N [--root DIR]
 
 Defaults: rotate when the log exceeds --threshold lines (default 250),
 keeping the most recent --keep lines (default 120).
@@ -30,17 +30,8 @@ import json
 import os
 import sys
 
-
-def saves_dir(root: str, game) -> str:
-    """Resolve the per-game saves directory (shared by all engine scripts)."""
-    if not game:
-        active = os.path.join(root, "games", "ACTIVE")
-        if os.path.exists(active):
-            with open(active, encoding="utf-8") as f:
-                game = f.read().strip()
-    if game:
-        return os.path.join(root, "saves", game)
-    return os.path.join(root, "saves")  # legacy single-game layout
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import saves_dir  # noqa: E402
 
 
 def log_path(root: str, game) -> str:
@@ -54,11 +45,28 @@ def read_lines(path: str):
         return f.readlines()
 
 
+def check(root: str, game, threshold: int = 250, keep: int = 120) -> dict:
+    """Report whether the log needs rotation (same result as --check)."""
+    lines = read_lines(log_path(root, game))
+    total = len(lines)
+    result = {"needs_rotation": total > threshold, "total_lines": total}
+    if result["needs_rotation"]:
+        trim_lines = total - keep
+        # Snap back to the nearest beat header so a "### " block is never cut in half
+        # (keeps a few extra lines; falls back to the plain cut if there is no header).
+        for i in range(trim_lines, 0, -1):
+            if lines[i].startswith("### "):
+                trim_lines = i
+                break
+        result["trim_lines"] = trim_lines
+        result["oldest_block"] = "".join(lines[:trim_lines])
+    return result
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Rotate the session log.")
     ap.add_argument("--root", default=os.getcwd(), help="project root")
-    ap.add_argument("--game", default=None,
-                    help="cartridge id (else read from games/ACTIVE)")
+    ap.add_argument("--game", required=True, help="game id (the baked skill id)")
     ap.add_argument("--check", action="store_true",
                     help="report whether rotation is needed")
     ap.add_argument("--trim", type=int, default=None,
@@ -84,14 +92,8 @@ def main() -> int:
         return 0
 
     # default / --check
-    total = len(lines)
-    needs = total > args.threshold
-    result = {"needs_rotation": needs, "total_lines": total}
-    if needs:
-        trim_lines = total - args.keep
-        result["trim_lines"] = trim_lines
-        result["oldest_block"] = "".join(lines[:trim_lines])
-    print(json.dumps(result, ensure_ascii=False))
+    print(json.dumps(check(args.root, args.game, args.threshold, args.keep),
+                     ensure_ascii=False))
     return 0
 
 

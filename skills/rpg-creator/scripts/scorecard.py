@@ -10,7 +10,15 @@ This script reads the game files and reports the numbers + a few measurable ense
 
 It only COUNTS. It does NOT judge whether the size is right, which axis is thinnest, or how to tune —
 those are the LLM's read and the user's call (design.md §5 steps 1-2). Pair the numbers here with that
-judgment. Sister script: validate.py (the pass/fail floor for step 5).
+judgment. Sister script: validate.py (the pass/fail floor for step 6).
+
+Cast pattern: main-arc.md's `## Design DNA` block (`- cast_pattern: rotating|fixed-party|solo|revolving`,
+else the pattern of its `- structure:` file in story-structures/) decides which ensemble flags apply.
+The rotation flags (rotation floor, solo time, full-cast-only-at-climax) are scored only for a
+`rotating` cast; for the other patterns they are null with a note naming the equivalent judgment
+check. A game with no DNA block is treated as rotating (the pre-DNA behaviour). Arcs written with
+`## Phases` / `## Pressure` report phases / pressure_sources; older `## Acts` / `## Ticking Clocks`
+arcs keep reporting acts / ticking_clocks.
 
 Counting is best-effort over free-form authored prose: the Presence Matrix uses display names of the
 author's choosing, so sub-cast tokens are counted as written, not resolved against character ids.
@@ -26,6 +34,20 @@ SPLIT_RE = re.compile(r"\s*(?:\+|,|&|/|\band\b)\s*", re.IGNORECASE)
 FULL_CAST_RE = re.compile(r"\b(everyone|all|full[- ]?cast|the whole cast)\b", re.IGNORECASE)
 CLIMAX_RE = re.compile(r"\b(climax|finale|final|showdown|confrontation)\b", re.IGNORECASE)
 PLACEHOLDER_RE = re.compile(r"\{\{.*?\}\}")
+DNA_LINE_RE = re.compile(r"^\s*[-*]\s*([A-Za-z_][\w -]*?)\s*:\s*(.+?)\s*$")
+CAST_RE = re.compile(r"^cast_pattern:\s*([a-z-]+)\s*$", re.MULTILINE)
+CAST_PATTERNS = ("rotating", "fixed-party", "solo", "revolving")
+STRUCTURES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                           "..", "story-structures"))
+# The judgment check that replaces the rotation gate for each non-rotating cast (design.md §4).
+PATTERN_CHECK = {
+    "fixed-party": "spotlight: every party member owns >=1 beat their skill/stake decides, and "
+                   "each member's secret or drive pays off once",
+    "solo": "visitors: the protagonist carries most beats; >=2 visitors are re-met in changed "
+            "circumstances and one recurring figure spans several phases",
+    "revolving": "turnover: new characters keep arriving through the middle phases, some "
+                 "departures land as losses, and >=1 constant changes across the story",
+}
 
 
 def read_text(path):
@@ -98,16 +120,61 @@ def count_lore(skill_dir):
     return {"lore_entries": total, "hidden_secrets": hidden}
 
 
+def has_heading(text, heading_substr):
+    return any(l.startswith("## ") and heading_substr.lower() in l.lower()
+               for l in (text or "").splitlines())
+
+
+def parse_dna(text):
+    """`- axis: value` lines under `## Design DNA` -> {axis: value}; {{placeholders}} skipped."""
+    dna = {}
+    for line in section(text, "Design DNA").splitlines():
+        m = DNA_LINE_RE.match(line)
+        if m and not PLACEHOLDER_RE.search(m.group(2)) and "{{" not in m.group(2):
+            dna[m.group(1).strip().lower().replace(" ", "_").replace("-", "_")] = m.group(2)
+    return dna
+
+
+def resolve_cast_pattern(dna):
+    """(pattern, source) — DNA line, else the structure file's line, else rotating (default)."""
+    raw = (dna.get("cast_pattern") or "").strip().lower()
+    if raw in CAST_PATTERNS:
+        return raw, "design_dna"
+    name = (dna.get("structure") or "").strip().lower()
+    text = read_text(os.path.join(STRUCTURES, name + ".md")) if re.fullmatch(r"[a-z0-9-]+", name) \
+        else None
+    m = CAST_RE.search(text or "")
+    if m and m.group(1) in CAST_PATTERNS:
+        return m.group(1), "story-structures/%s.md" % name
+    if raw:
+        return "rotating", "default (unrecognised cast_pattern %r)" % raw
+    return "rotating", "default (no Design DNA cast_pattern)"
+
+
+def count_items(text, heading, numbered):
+    """Numbered (`1. `) or bulleted (`-`/`*`) non-placeholder lines under a `## ` heading."""
+    def hit(l):
+        return re.match(r"\s*\d+\.\s", l) if numbered else l.strip().startswith(("-", "*"))
+    return len([l for l in section(text, heading).splitlines()
+                if hit(l) and not PLACEHOLDER_RE.search(l)])
+
+
 def parse_arc(skill_dir):
     text = read_text(os.path.join(skill_dir, "story", "main-arc.md"))
     if text is None:
-        return {"_note": "story/main-arc.md missing"}
-    acts = len([l for l in section(text, "Acts").splitlines()
-                if re.match(r"\s*\d+\.\s", l) and not PLACEHOLDER_RE.search(l)])
-    clocks = len([l for l in section(text, "Ticking Clock").splitlines()
-                  if l.strip().startswith(("-", "*")) and not PLACEHOLDER_RE.search(l)])
+        return {"_note": "story/main-arc.md missing", "_dna": {}}
+    out = {"_dna": parse_dna(text)}
+    if has_heading(text, "Phases"):
+        out["phases"] = count_items(text, "Phases", True)
+    else:
+        out["acts"] = count_items(text, "Acts", True)
+    if has_heading(text, "Pressure"):
+        out["pressure_sources"] = count_items(text, "Pressure", False)
+    else:
+        out["ticking_clocks"] = count_items(text, "Ticking Clock", False)
     matrix = section(text, "Presence Matrix")
-    return {"acts": acts, "ticking_clocks": clocks, **ensemble(matrix)}
+    out.update(ensemble(matrix))
+    return out
 
 
 def ensemble(matrix_text):
@@ -164,28 +231,45 @@ def main():
     lore = count_lore(skill_dir)
     arc = parse_arc(skill_dir)
 
+    dna = arc.pop("_dna", {})
+    cast_pattern, cast_source = resolve_cast_pattern(dna)
+
     # The one measurable ensemble floor from design.md §4: distinct sub-casts >= named characters.
     distinct = arc.get("distinct_subcasts")
     rotation_floor_met = (distinct >= chars["named_total"]) if isinstance(distinct, int) else None
+    flags = {
+        "rotation_floor_met": rotation_floor_met,
+        "_rotation_floor": "distinct_subcasts (%s) >= named characters (%d)" % (
+            distinct, chars["named_total"]),
+        "everyone_gets_solo_time": (not arc.get("tokens_without_solo_beat"))
+        if "tokens_without_solo_beat" in arc else None,
+        "full_cast_reserved_for_climax": arc.get("full_cast_only_at_climax"),
+    }
+    if cast_pattern != "rotating":
+        flags = {
+            "rotation_floor_met": None,
+            "everyone_gets_solo_time": None,
+            "full_cast_reserved_for_climax": None,
+            "_not_applicable": "cast_pattern is %s: the rotation flags apply only to a rotating "
+                               "cast. Judge instead (design.md §4) — %s." % (
+                                   cast_pattern, PATTERN_CHECK[cast_pattern]),
+        }
 
     print(json.dumps({
         "_status": "ok",
         "id": gid,
+        "design_dna": dna or None,
+        "cast_pattern": cast_pattern,
+        "_cast_pattern_source": cast_source,
         "characters": chars,
         "lore": lore,
-        "structure": {k: arc[k] for k in ("acts", "ticking_clocks", "beats") if k in arc},
+        "structure": {k: arc[k] for k in ("phases", "acts", "pressure_sources", "ticking_clocks",
+                                          "beats") if k in arc},
         "ensemble": {k: arc[k] for k in (
             "distinct_subcasts", "full_cast_beats", "full_cast_labels",
             "full_cast_only_at_climax", "characters_with_solo_beat",
             "tokens_without_solo_beat", "matrix_tokens", "_note") if k in arc},
-        "measurable_flags": {
-            "rotation_floor_met": rotation_floor_met,
-            "_rotation_floor": "distinct_subcasts (%s) >= named characters (%d)" % (
-                distinct, chars["named_total"]),
-            "everyone_gets_solo_time": (not arc.get("tokens_without_solo_beat"))
-            if "tokens_without_solo_beat" in arc else None,
-            "full_cast_reserved_for_climax": arc.get("full_cast_only_at_climax"),
-        },
+        "measurable_flags": flags,
         "note": ("Counts only. Whether this size is RIGHT — thinnest axis, what to add/cut — is the "
                  "LLM's read and the user's call (design.md §5). Flags are measurable floors, not "
                  "quality verdicts: a passing flag still needs the §4 judgment gates."),

@@ -51,6 +51,6 @@
     "pending_seeds": []
   },
   "_modules": {
-    "comment": "Module-specific state blocks go here or at top level, per the game. E.g. the magic-potency module uses a 'spirit_tongue' block; a stats module might use 'stats'. The seed (the game's own state.seed.json) sets initial values."
+    "comment": "Module-specific state blocks go here or at top level, per the game. E.g. the magic-potency module uses a 'casting' block; a stats module might use 'stats'. The seed (the game's own state.seed.json) sets initial values. OPTIONAL top-level `_cold`: a list of dotted state paths the per-turn hot view (load.py --hot) drops because they are prose/history, e.g. [\"red_tape.history\", \"casting.history\"]; lists are replaced by `<field>_count`, and load.py --key PATH still reads them. Built-in cold defaults already cover relationship notes/suspects/revealed, drift ledger/pending_seeds, goals mid/long and player description/persona_file."
   }
 }

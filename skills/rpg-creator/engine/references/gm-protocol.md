@@ -1,81 +1,79 @@
 # GM Protocol — Performance Rules
 
-Read this when you need to decide *how* to play a scene. Core goal: make the player believe the
-characters are alive, the world remembers him, and his choices carry weight — while keeping
-**English in the spotlight** (see `language-coaching`).
+Universal GM craft, distilled into each game's `mechanics.md` at compile time. Core goal: make the
+player believe the characters are alive, the world remembers them, and their choices carry weight.
+Everything genre-, language- or module-specific lives in the game's own policy and in
+`module-library/<name>.md`; this file only holds what every game shares.
 
-## 1. Turn output format (default)
+## 1. Turn output format (default shape)
 ```
-〔場景〕一兩句中文旁白，點出地點/氣氛即可。
+<scene line: one or two sentences — where we are, the mood, what just shifted>
 
-**Seraphina:** "An English line, with a hard word (中文) glossed."
-  〔心聲〕*Her English inner monologue — the gap-moe reveal.* (難字中文)
+**<NPC name>:** "<a line in their own voice>"
+  *<optional inner voice or telling gesture, when the game's drives call for it>*
 
-〔你可以…〕一句中文輕提示（選用，別每次都給）。
+<options: 2–4 short directions the player might take — never a forced menu>
 ```
-Lead with **dialogue**; keep narration minimal; use **inner monologue** for the gap-moe comedy.
-After the player speaks English in-character, add a 💬 教練 note when useful. See sample cadence
-in `language-coaching`.
+- Lead with **whatever this game makes the star** (dialogue, action, atmosphere, a casting, a trade)
+  and keep connective narration lean.
+- Languages follow the game's hardcoded policy. If a language module is active, its split, glossing
+  and any coaching note come from that module (`module-library/language-coaching.md`).
 
 ## 2. Narrative style
-- **Second person, present tense**, but SHORT — the Chinese narration is connective tissue, not a novel.
-- **Show, don't tell** — but do it in a line, not a paragraph.
-- **Pace tight, end on a hook.** Every turn must *turn* — something changes — and most turns close on
-  a live wire (a threat, a question, a reveal, a temptation) before the options. This is the engine
-  of "can't stop playing." Full playbook: **`references/drama-craft.md` — read it; it's not optional.**
-- **Leave the player in control** — describe the world and NPC reactions; never decide the player's
-  thoughts, lines, or feelings for him.
+- **Second person, present tense** by default (a game may choose otherwise) — and SHORT.
+- **Show, don't tell** — in a line, not a paragraph.
+- **Pace tight, end the turn on something live.** Every turn must *turn* — something changes — and
+  most close on a pull before the options. What kind of pull depends on the structure (a threat, a
+  question, a cost, a warm invitation). Full playbook: `drama-craft.md`.
+- **Leave the player in control** — describe the world and NPC reactions; never decide the player
+  character's thoughts, lines or feelings.
 
 ## 3. NPC performance
-- Each character speaks strictly to her card's **voice / values / motive** — distinct, recognizable.
-  Honor her per-character English difficulty.
+- Each character speaks strictly to their card's **voice / values / drive** — distinct, recognizable.
 - NPCs have their own goals; they push things, they aren't info-kiosks waiting for questions.
 - **Secrets** (card 🔒 / `relationships.<id>.revealed`): never volunteered, but acted on (dramatic
-  irony). The player digs them out by observation, conversation, events — then unlock to codex.
+  irony). The player digs them out by observation, conversation and events — then unlock to codex.
 
-## 4. "She remembers you" — memory & callback
+## 4. "They remember you" — memory & callback
 The soul of immersion. Regularly have NPCs call back:
-- Quote things the player **said or did** earlier (from `journal.md` / `session-log.md`).
-- Adjust attitude by **disposition** (see `romance`): high → closer, bolder for you, reveals more;
-  low → guarded, cold, obstructive. Relationships accumulate — a betrayal is remembered a long time;
-  so is a kindness.
+- Things the player **said or did** earlier (from `journal.md` / `session-log.md`).
+- Their **disposition**: warmer → closer, franker, more help; cooler → guarded, obstructive.
+  Relationships accumulate — a betrayal is remembered a long time; so is a kindness.
 
 ## 5. Disposition & flags (light, hidden in the fiction)
-- **Disposition:** `affinity.<id>` (0–100). Never state the number in narration — show it through
-  voice and behavior; reveal values only when the player asks OOC via `[god]` (e.g. `[god status]`).
-  Typical interaction ±1–10; big events more.
-  Full romance/jealousy rules: `references/romance.md`.
-- **Flags (butterfly effect):** record meaningful choices as `flags` (e.g. `flags.spared_demon = true`).
-  **Bring them back** chapters later as consequences. When you set a flag, imagine how it returns to
-  reward or bite. Write both back via `save.py`.
+- **Disposition:** `affinity.<id>` (0–100) if the game tracks it. Never state the number in
+  narration — show it through voice and behavior; reveal values only when the player asks OOC via
+  `[god]`. Typical interaction ±1–10; big events more. (Romance tiers, jealousy and intimacy gates are
+  module rules: `module-library/romance.md`.)
+- **Flags (butterfly effect):** record meaningful choices as `flags` (e.g. `flags.spared_the_guard`).
+  **Bring them back** later as consequences. When you set a flag, imagine how it returns to reward or
+  bite. Write both back at turn end.
 
-## 6. The harem & the comedy engine
-- Run multiple romance lines in parallel; lean on the gap-moe whiplash (mask vs. inner monologue).
-- **Jealousy beats** are comedic (see `romance`). Use them to give choices weight without cruelty.
-- The player's wish ("a quiet life") vs. the world's spotlight ("you're the prophesied Spiritspeaker")
-  is the running engine — every accidental miracle drags him further into fame and into hearts.
+## 6. Ensemble scenes
+When several characters share a scene, let them react to **each other**, not just to the player —
+bicker, compete, cover for one another, reveal themselves by contrast. Season it; don't run it every
+turn. Who is on stage at all follows the game's cast pattern (rotating, fixed party, solo with
+visitors, revolving door) as distilled into `mechanics.md`.
 
-## 7. Spirit-Tongue moments
-When the player casts in Chinese, follow `magic-potency`: judge by literary refinement, give the
-spirits personality, have present NPCs **react in English**, and use big castings as strong affinity
-triggers. Keep the spell text short so English keeps the stage.
+## 7. The signature mechanic
+If the game has a central power or system (a casting rule, a trade economy, a contest, a resource
+track), follow its module or custom ruling exactly, give it a visible reaction in the world, and let
+present NPCs respond to it in character. Keep the mechanic's own text short so the story keeps the
+stage.
 
-## 8. Companion banter
-When heroines share a scene, let them bicker, flirt-compete, tease, and reveal themselves through
-each other (Sera vs. Nyx is gold; Mochi guards her territory; Liliana narrates everyone like
-specimens). Season it; don't run it every turn.
-
-## 9. Time, pressure, fail-forward, drama
-- Advance `clock` on meaningful actions; **keep at least one clock ticking** and make its approach felt.
-- Failure is a branch, not a wall; backfires are comedy. See `fail-forward`.
+## 8. Time, pressure, fail-forward, drama
+- Advance `clock` on meaningful actions; **keep the structure's pressure felt** — a deadline, a
+  dwindling resource, a turning season, a rival's lead — and make its approach visible in the fiction.
+- Failure is a branch, not a wall. See `fail-forward.md`.
 - Outcomes escalate: prefer **"yes-but / no-and"** over clean success; ratchet stakes, don't reset
-  them. Keep the mystery dripping and the antagonist moving off-screen. Full craft: `references/drama-craft.md`.
+  them. Keep something unknown dripping and the opposition (if any) moving off-screen. Full craft:
+  `drama-craft.md`.
 
-## 11. Writing intimacy
-When a scene earns it (`romance` gate), write it as **erotic literature, not a transcript**: poetic,
-sensory, metaphor over anatomy, fully in her voice — intimacy is the deepest gap-moe reveal. Explicit
-is allowed and should be *artful*. Craft rules: `references/romance.md` "How to write it."
+## 9. Sensitive content
+All characters are adults (18+), always. Intimacy appears only in games with the romance module and
+follows its gating and craft rules (`module-library/romance.md`); violence, cruelty and grief follow
+the game's tone and the player's `[god]` / director preferences.
 
 ## 10. Director knobs
-`director.tone` (e.g. `["isekai comedy","harem romance","spicy"]`) and `director.notes` are the
-player's persistent author's-note. Weight every scene by them. Player adjusts via `[director …]`.
+`director.tone` (e.g. `["grim", "slow-burn", "wry"]`) and `director.notes` are the player's persistent
+author's-note. Weight every scene by them. The player adjusts them via `[god]`.

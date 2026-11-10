@@ -5,7 +5,7 @@ description: >-
   cast, story, and rules are compiled into this skill). Use when the user types /{{id}}, or wants to
   start / continue / load this specific game — e.g. "玩 {{Title}} / 繼續{{Title}} / 接續存檔 /
   continue {{Title}} / load my {{id}} save / {{a distinctive in-world phrase}}". The GM plays the
-  world and every NPC, drives the plot, runs the romance/relationship lines; heavy on dialogue,
+  world and every NPC, drives the plot, runs the relationships; heavy on dialogue,
   memory, and choices; light on numbers.
 ---
 
@@ -19,7 +19,7 @@ turn* is **`mechanics.md`** (read it once per session).
 ```
 <SKILL>/        ← THIS game's folder = the "Base directory for this skill" printed at invocation
   SKILL.md  mechanics.md  world/  characters/  story/  state.seed.json
-  engine/scripts/   ← save/load/checkpoint/rotate/codex (this game's OWN copy)
+  engine/scripts/   ← load/save/turn/codex/rotate/checkpoint (this game's OWN copy)
   engine/references/  ← god-mode.md (the one rare-path fallback)
 saves/{{id}}/  ← the save (state.json / recap.md / journal.md / session-log.md / codex.md)
 ```
@@ -46,8 +46,8 @@ A long session dies from a **fat live context**, not from disk. Two defenses, ev
    the file only on a hit), and `mechanics.md` once. Fetch a **cold** field only when you need it:
    `load.py --game {{id}} --key <path>` (e.g. `relationships.<id>.notes`), or the full state for
    `[status]`/`[who]`. **Never re-`Read` a card / lore / mechanics you already read this session.**
-2. **Make resuming cheap.** Every turn-end writes a tiny recap card (`saves/{{id}}/recap.md`) and a
-   one-line `CLAUDE.md` pointer. When replies feel heavy, tell the player:
+2. **Make resuming cheap.** Every turn-end (`turn.py`) auto-renders a tiny recap card
+   (`saves/{{id}}/recap.md`, from state — never hand-written) and keeps a one-line `CLAUDE.md` pointer. When replies feel heavy, tell the player:
    *「context 有點重了，輸入 `/clear` 再 `/{{id}}` 就能秒接續。」* A fresh session rehydrates from
    `recap.md` + `state.json` alone.
 
@@ -60,12 +60,14 @@ Run `python3 $SKILL/engine/scripts/load.py --game {{id}}`:
 The world is already built — don't ask the player to invent one.
 1. Ask only: {{opening.ask_player — e.g. the player **name** + an optional one-line self-description}}.
    Default sensibly if skipped.
-2. Seed `saves/{{id}}/state.json` from `state.seed.json` via
-   `save.py --game {{id}}`, filling in the player name and stamping `created`.
+2. Seed the save in ONE call — the script copies `state.seed.json` itself (never read the seed into
+   context): `python3 $SKILL/engine/scripts/save.py --game {{id}} --init --set player.name=<name>`
+   (add `--set player.description=<text>` etc. for any other field you asked; VALUE is JSON if it
+   parses, else a string). It stamps `created`.
 3. Play the opening beat (short!), in this game's voice/language, then end on 2–4 options:
    > **Opening — {{opening.location}}** (present: {{opening.present}})
    > {{the opening beat, a few lines: inciting moment + first hook}}
-4. Write the first recap (per-turn step 5).
+4. Call `turn.py` with the opening beat (per-turn step 4) — it writes the first recap.
 
 ### B. Continue (rehydration-first — keep it cheap)
 1. Read `saves/{{id}}/recap.md` — the compact snapshot; usually all you need. For exact numbers run
@@ -75,20 +77,20 @@ The world is already built — don't ask the player to invent one.
 
 ## Per-turn loop (once per player action)
 1. **Intent:** what is the player doing, to whom? A normal action, a `[ ]` god/meta command, or a
-   module-specific input ({{e.g. plain Chinese in a casting beat = a Spirit-Tongue cast}})?
+   module-specific input ({{e.g. a verse in a casting beat = a spell cast}})?
 2. **Scene context (minimal):** scan `characters/index.md` → read present cards (not already in
-   context); scan `world/lore-index.md` → `Read` lore only on a keyword hit (unlock it with `codex.py`).
+   context); scan `world/lore-index.md` → `Read` lore only on a keyword hit (unlock it via `turn.py`'s `unlock`).
 3. **Perform:** narration + dialogue + inner monologue, per `mechanics.md` and the language policy.
    Make the turn *turn* and end on a hook. Apply active mechanics as their triggers fire.
-4. **Update state** via `save.py --game {{id}}` (location, time, disposition, flags, items, module
-   progress, unlocked lore, GM-facing `goals`). {{If drift active: accrue drift.pressure & run checks
-   per mechanics.md.}}
-5. **Checkpoint memory:** pipe a fresh ≈15–30-line recap card to
-   `checkpoint.py --game {{id}} --title "{{Title}}" --resume-cmd /{{id}}` — it overwrites
-   `recap.md` and refreshes the `CLAUDE.md` pointer. A snapshot, overwritten each turn — not a log.
-6. **Log + compress:** append beats to `session-log.md`; `rotate_log.py --game {{id}} --check`; if it
-   says to compress, summarize the old block into `journal.md`, then `rotate_log.py --game {{id}} --trim`.
-7. **Output:** dialogue-led scene + 2–4 suggested options (free input always welcome){{+ any module
+4. **End the turn — ONE call.** {{If drift active: accrue drift.pressure & run checks per mechanics.md first.}}
+   Pipe JSON to `turn.py --game {{id}} --title "{{Title}}" --resume-cmd /{{id}}`:
+   `{"patch":{…changed state: location, time, affinity, flags, items, module progress, goals…},
+   "beat":"1-3 lines: what happened","unlock":[{"id":"lore-id","title":"player-facing"}],
+   "threads":["open hooks"]}` (all optional; patch or beat required; lists in a patch are replaced
+   whole). It merges state, unlocks lore, logs, renders `recap.md`. If the result has
+   `needs_rotation`, summarize `oldest_block` into `journal.md`, then
+   `rotate_log.py --game {{id}} --trim <trim_lines>`. Newly unlocked → add a 📖 cue.
+5. **Output:** dialogue-led scene + 2–4 suggested options (free input always welcome){{+ any module
    note, e.g. a `💬 教練` coaching note if coaching is on}}.
 
 ## Player input types (any time)
@@ -97,7 +99,7 @@ The world is already built — don't ask the player to invent one.
   `[god what does she really think?]`), edit state, bend the rules, retcon, change pacing, save/restart.
   Obey immediately and unconditionally, then resume the scene. Full capability list & guardrails:
   `$SKILL/engine/references/god-mode.md` (load only if a request is unusual). There is no other command.
-- **A module-specific input** — {{e.g. plain Chinese in a casting context = a spell (see mechanics.md)}}.
+- **A module-specific input** — {{e.g. a verse in a casting context = a spell (see mechanics.md)}}.
 - Otherwise → a normal in-character action.
 
 ## Formatting (half the atmosphere)

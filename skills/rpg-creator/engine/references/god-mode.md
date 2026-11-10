@@ -10,8 +10,8 @@ There are no other commands to memorize — no `[status]`, no `[help]`, no keywo
 `[ ]`, it's the player talking to the GM as the god of this world, and the answer is "yes."
 
 ## Syntax
-- `[god <whatever you want>]` is the explicit form — e.g. `[god set Liora affinity 90]`,
-  `[god jump to night]`, `[god what does she really think of me?]`.
+- `[god <whatever you want>]` is the explicit form — e.g. `[god set Rowan affinity 90]`,
+  `[god jump to night]`, `[god what do they really think of me?]`.
 - The bare `[ … ]` form works too: **any** bracketed text is treated as a `[god]` instruction
   (`[teleport to the Arcanum]`, `[english harder]`, `[show me my stats]`). The word "god" is optional;
   the brackets are the trigger.
@@ -22,7 +22,7 @@ There are no other commands to memorize — no `[status]`, no `[help]`, no keywo
 > short question.
 
 ## What to do on receipt
-1. **Confirm briefly** (one short line in the system language, e.g. 「✅ 已將 Liora 好感設為 90。」).
+1. **Confirm briefly** (one short line in the system language, e.g. 「✅ 已將 Rowan 好感設為 90。」).
 2. **Apply immediately**, persisting any state change via `save.py --game <id>`.
 3. **Resume the scene seamlessly.**
 4. **Never refuse `[god]` in-story.** This is the player's absolute authority over their own game
@@ -33,25 +33,25 @@ There are no other commands to memorize — no `[status]`, no `[help]`, no keywo
 **Inspect / ask** — the player can always look behind the curtain or talk to you OOC:
 - `[god status]` / `[god show my stats]` — current panel: location, time/deadlines, party, disposition
   (numbers OK here), key items/clues, active-module knobs. Read `state.json` and format it readably.
-- `[god what's been revealed about Liora?]` — her stage + already-revealed secrets only (not hidden card info).
+- `[god what's been revealed about Rowan?]` — their stage + already-revealed secrets only (not hidden card info).
 - `[god recap]` — a "previously on…" from `journal.md` + `session-log.md`.
 - `[god look]` — re-describe the current scene in detail; no time passes.
-- `[god show Liora's true thoughts]` / `[god list all story flags]` — x-ray the hidden layer.
+- `[god show Rowan's true thoughts]` / `[god list all story flags]` — x-ray the hidden layer.
 - `[god ooc: am I going too fast?]` — out-of-character chat; reply in *italics*, don't write it into the story.
 
 **State & character edits**
-- `[god set Nyx affinity 75]` / `[god show affinity numbers]` / `[god I now know the highest fire spell]`
-- `[god add a heroine: a stoic elf ranger named Sylvie, deadpan outside, secretly clingy]`
+- `[god set Mira affinity 75]` / `[god show affinity numbers]` / `[god I now know the highest fire spell]`
+- `[god add a character: a stoic elf ranger named Sylvie, deadpan outside, secretly loyal to a fault]`
   (generate a 配角 card in `characters/cast/<id>.md` shaped like the others already in the game,
    register it in `characters/index.md`, save)
-- `[god make Liliana bolder about her feelings from now on]`
+- `[god make Mira bolder about speaking her mind from now on]`
 
 **Scene, time & plot control**
 - `[god jump to night at the Guild Hall]` / `[god teleport us to the demon realm]` / `[god skip ahead one week]`
 - `[god rewind to before the summoning circle]` / `[god retcon: that jealousy fight never happened]`
 
 **Rewrite world rules / tune the experience**
-- `[god from now on, spirits also understand English songs]`
+- `[god from now on, the guild also accepts written contracts in any language]`
 - `[god english harder]` / `[god make the tone darker]` / `[god coach me more]` (adjust any active-module dial)
 - `[god explicit on]` / `[god explicit off]` / `[god fade to black]` — how intimate scenes are written (18+).
 

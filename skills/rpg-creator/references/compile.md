@@ -1,9 +1,11 @@
 # Compile — emit the two distilled files that make a game self-contained
 
-Load this when the world content is written (`references/design.md` §3) and you're producing the parts
+Load this once the shape is settled and the content is expanded (`references/design.md` §3 pass 2; SKILL step 5) and you're producing the parts
 unique to a **baked game**: its `SKILL.md` (specialized play loop) and `mechanics.md` (distilled
 rules). These two replace the entire generic engine at play time, so getting them right is what buys
-the context win. `compile.py` has already laid down both as templates in `.claude/skills/<id>/`.
+the context win. `compile.py` has already laid down both as templates in `.claude/skills/<id>/`, and
+(with `--title` / `--modules`) mechanically filled the id, title, active-module list, unused module
+sections, drift block and the drift/coaching placeholders — **verify those, fill only what is left**.
 
 ## The contract a baked game must satisfy
 At play time the baked skill loads, in a normal turn:
@@ -27,20 +29,25 @@ Fill the template `assets/game-skill-SKILL.template.md` already copied in. Rules
      user's UI language) — e.g. "繼續…/玩…/continue …/load my … save". Do **not** make it sound generic
      like the old engine; it should win when the user means *this* game and stay quiet otherwise.
 2. **Hardcode everything fixed for this game** — no runtime branching survives compilation:
-   - the **id** and **title**;
+   - the **id** and **title** (filled by `compile.py`; verify);
    - the **language policy** as plain prose (e.g. "Narration in minimal Traditional Chinese; all
      dialogue in English, glossing hard words as `word (中文)`; system/coaching in Chinese") — not a
      `language_policy:` block to "honor";
-   - the **active-module list** named in plain text, with the line "their rules live in `mechanics.md`";
+   - the **active-module list** named in plain text, with the line "their rules live in `mechanics.md`"
+     (filled by `compile.py --modules`; verify);
    - the **opening beat** inlined (location, present cast, the beat, what to ask the player);
    - the **resume command** `/<id>` and the **`$SKILL` path convention** (scripts at
      `$SKILL/engine/scripts/`, where `$SKILL` = the skill's base directory printed at invocation).
 3. **Trim the per-turn loop to the steps this game uses.** Drop steps for absent modules (no drift
-   accrual line if drift isn't active; no coaching-note line if coaching is off). Keep: intent → minimal
+   accrual line if drift isn't active; no coaching-note line if coaching is off — `compile.py --modules`
+   already resolved both; check any custom-module step by hand). The New Game step seeds the save with
+   `save.py --game <id> --init --set player.name=<name>` (the script copies `state.seed.json`; the model
+   never reads the seed). Keep: intent → minimal
    scene context (read state with `load.py --hot`; scan indexes, load present cards / keyword lore;
    `load.py --key PATH` for a cold field) → perform (per `mechanics.md`) →
-   update state (`save.py`) + unlock lore (`codex.py`) → checkpoint (`checkpoint.py --game <id>
-   --title "<Title>" --resume-cmd /<id>`) → log + rotate → output (scene + 2–4 options + any module
+   end the turn in ONE call (`turn.py --game <id> --title "<Title>" --resume-cmd /<id>` with JSON
+   `{patch, beat, unlock, threads}`: saves state, unlocks lore, logs the beat, renders `recap.md`,
+   checks rotation; `save.py`/`codex.py`/`checkpoint.py` remain for manual edits) → output (scene + 2–4 options + any module
    note).
 4. **Keep the context-discipline + cheap-resume rules** (load only what the turn needs; recap.md +
    state.json rehydrate a fresh session; tell the player to `/clear` then `/<id>` when context feels
@@ -57,29 +64,36 @@ This is one file that condenses, **in this game's own terms**, everything the GM
 well. Build it by distilling these sources and dropping whatever doesn't apply:
 
 - **Universal craft** → read `engine/references/gm-protocol.md` (format, NPC voice, memory, flags) and
-  `engine/references/drama-craft.md` (pacing & tension — every turn *turns* and ends on a hook; a clock
-  ticks; stakes escalate) — these are rpg-creator's canonical engine source. Distill the operative rules
+  `engine/references/drama-craft.md` (pacing & tension — every turn *turns* and ends on a pull;
+  pressure is felt; stakes escalate) — these are rpg-creator's canonical engine source. Distill the operative rules
   into a tight "How to run a turn" section. Fold in the relevant bits of `engine/references/fail-forward.md`
   (failure is a story; the Fortune's-Favor crit band) if the game has rolls/attempts.
+- **Story structure** → read `story-structures/<structure>.md` (the name is in `story/main-arc.md`'s
+  `## Design DNA`) and distill its phase shape, pressure source, opposition, cast pattern and beat
+  shape into mechanics.md's **`## Pacing & pressure`** section. Where it swaps a default (e.g. a
+  seasons game has no ticking clock and ends turns on a warm pull), the structure wins over
+  drama-craft — write the swapped rule, not both.
 - **Lazy lore + codex** → read `engine/references/lorebook-protocol.md` (keyword-triggered loading of
   `world/lore-index.md` → `world/lore/<id>.md`, and `codex.py` unlocks). This is *the* context-saving
   mechanic, so distill a short "How lore fires & unlocks" note into `mechanics.md` rather than assuming
   it. (It's SillyTavern's World Info on a filesystem; character secrets belong here, not bloating cards.)
 - **Each active module** → read `module-library/<name>.md` and write a short section with only the
   rulings this game uses, in its own flavor:
-  - `romance` — disposition/affinity, harem dynamics, jealousy, **gated** & consensual intimacy, and
+  - `romance` — disposition/affinity, optional multi-partner dynamics, jealousy, **gated** & consensual intimacy, and
     the art-not-transcript rule for explicit (18+), honoring `[fade to black]` / `[explicit on/off]`.
-  - `magic-potency` — the casting ruling (e.g. "better literature → bigger miracle"), what counts as a
+  - `magic-potency` — the casting ruling (e.g. "better craft → bigger effect"), what counts as a
     cast, and how bystanders read it.
   - `language-coaching` — the language split + the in-world excuse for coaching, and the `💬 教練` note
     format.
   - `drift` — the accrual + check loop and the seed/reroute behavior (keep the numbers from the seed's
     `drift` block).
   - a **custom** module → distill its `.claude/skills/<id>/modules/<name>.md` ruling here too.
-- **The game's golden rules** → a short list specialized from the engine's commandments: lead with the
-  chosen medium; thriller-not-hangout; gap-moe is the payoff; 18+ gated intimacy as art; failure is a
-  story; always give direction via fiction (keep `goals` current); `[god]` (any `[ ]` input) is supreme
-  within the 18+ guardrail; guard the context.
+- **The game's golden rules** → keep the universal ones literal (all characters 18+, any intimacy
+  gated and written as art; failure is a story; direction through fiction — keep `goals` current;
+  `[god]` (any `[ ]` input) is supreme within the 18+ guardrail; guard the context) and fill the
+  placeholders: lead with the chosen medium; the **structure's** rule (its "Golden rules it swaps" —
+  e.g. "thriller, not hangout" only for a thriller-shaped spine); the **cast's** rule from the drive
+  palette (e.g. "the hidden self is the payoff" only if `gap` is a chosen drive).
 
 Aim for ~120–160 lines. If it balloons past ~200, you're copying, not distilling — cut caveats and
 branches that don't apply to this world. Write it in English (it's authored content); only glossed
@@ -89,7 +103,8 @@ samples may carry a `word (中文)` gloss.
 > for reference, but still distill its operative rules into `mechanics.md` so play never has to open it.
 
 ## Re-distilling after edits
-If a complexity-tuning edit (`design.md` §5) changes the **opening**, the **active-module list**, or a
+Complexity tuning (`design.md` §5) normally happens on the outline *before* distilling, so nothing needs
+redoing. If a later content-changing edit (after expansion) changes the **opening**, the **active-module list**, or a
 **module's ruling**, re-edit the affected file: opening/module-list/language → `SKILL.md`; module
 rulings/craft → `mechanics.md`. Content-only edits (a new lore, a tweaked card) need neither.
 
@@ -99,30 +114,50 @@ rulings/craft → `mechanics.md`. Content-only edits (a new lore, a tweaked card
 ```bash
 python3 "$SKILL/scripts/validate.py" --id <id>
 ```
-It must exit 0 (no FAIL). It covers, mechanically: required files present; **no leftover
-`{{placeholders}}`**; `state.seed.json` parses and `meta.game_id == <id>`; opening `present_characters`
-all have cards; `player.persona_file` resolves; every `public:no` lore row has its `world/lore/<id>.md`
-body; every `world/ characters/ story/` path the SKILL/mechanics name resolves; frontmatter `name == <id>`
-with a non-empty `description`; the full engine is bundled (`compile.py --id <id> --update-engine` if
-not); and the bundled `load.py --game <id>` actually runs. **Fix every FAIL, re-run to a clean exit 0,
-then read each WARN** (notably `authoring-language`: confirm every non-ASCII hit is a lore keyword or a
-`word (中文)` gloss — rewrite anything else to English).
+It must exit 0 (no FAIL). **validate.py covers, mechanically:**
+- required files present; **no leftover `{{placeholders}}`**; `state.seed.json` parses, `meta.game_id == <id>`,
+  and `meta.game_title` / `scene.location` / `scene.summary` are non-empty (FAIL) and `goals.short` is set (WARN);
+- opening `present_characters` all have cards; `player.persona_file` resolves; every `public:no` lore row has
+  its `world/lore/<id>.md` body; every `world/ characters/ story/` path the SKILL/mechanics name resolves;
+- frontmatter `name == <id>` with a non-empty `description`;
+- **no generic-engine leftovers** in SKILL.md/mechanics.md: FAIL on `games/ACTIVE`, a `language_policy:` block,
+  or `/rpg` as the resume command; WARN when `mechanics.md` is over 200 lines (copying, not distilling);
+- **roster coherence**: every `characters/index.md` row has `characters/cast/<id>.md` (FAIL); orphan cast cards
+  and orphan `world/lore/*.md` files with no lore-index row (WARN — they can never fire); seed `affinity` /
+  `relationships` / `present_characters` ids are all cast ids (FAIL);
+- **card legibility floor**: every card (cast + `player.md`) has an Age and an Appearance (FAIL if the label is
+  absent, WARN if it is empty or a placeholder);
+- **Presence Matrix names** in `story/main-arc.md` resolve to cast ids/names (WARN; silent if the story has no
+  matrix);
+- the full engine (including `_common.py`) is bundled (`compile.py --id <id> --update-engine` if not), and a
+  **real smoke test** of the game's OWN bundled engine passes in a throwaway root: `save.py --init`,
+  `load.py --hot`, then `turn.py` with a beat + one unlock, with `state.json` / `recap.md` /
+  `session-log.md` / `codex.md` all written (it never touches the real `saves/` or `CLAUDE.md`).
+
+**Fix every FAIL, re-run to a clean exit 0, then read each WARN** (notably `authoring-language`: confirm every
+non-ASCII hit is a lore keyword or a `word (中文)` gloss — rewrite anything else to English; and any
+`presence-matrix` / `card-legibility` / orphan WARN — fix, or know why it is fine).
 
 **Then judge by hand what validate.py cannot** (these are quality calls, not mechanics):
 - The loop references **nothing outside the game folder** for a normal turn beyond
-  `$SKILL/engine/references/god-mode.md` (the one edge-case fallback). No `games/ACTIVE`, no
-  `language_policy:`-to-honor, no module on/off branching, no meta-command table left behind — the only
-  OOC command is `[god]`. (validate.py checks that *named paths resolve*, not that the loop is free of
-  generic-engine assumptions — that read is yours.)
+  `$SKILL/engine/references/god-mode.md` (the one edge-case fallback), has no module on/off branching and no
+  meta-command table left behind — the only OOC command is `[god]`. (validate.py greps for the specific
+  leftovers above; it cannot tell whether the loop *reads* as generic-engine prose.)
 - `mechanics.md` covers every module in the SKILL's active list and the universal turn-craft, and is a
-  genuine **distillation, not a verbatim copy** of the sources.
-- Run the `design.md` §4 judgment gates: ensemble-depth (real rotation, solo time, full-cast only at the
-  climax), character-legibility, heroine-beauty. (`authoring-language` is half-automated: validate.py
-  surfaces the candidate lines as WARNs; you decide which bucket each falls in.)
+  genuine **distillation of the sources** (validate.py only warns on sheer length).
+- Run the `design.md` §4 judgment gates: ensemble-depth for the DNA's cast_pattern (rotating: real
+  rotation, solo time, full-cast only at the climax; other patterns: their equivalent check),
+  character-legibility beyond the Age/Appearance floor, heroine-beauty (romance module only). (`authoring-language` is
+  half-automated: validate.py surfaces the candidate lines as WARNs; you decide which bucket each falls in.)
 
-- **Only once validate.py exits 0 AND the judgment gates pass**, proceed to the SKILL §6 engineering-polish step: a
-  `skill-creator` subagent polishes the baked skill's *engineering surface only* (frontmatter,
-  `description`/trigger, structure) — never the frozen game content or `mechanics.md`'s meaning — then a
-  regression check confirms `/<id>`, `load.py`, and the SKILL's hardcoded invariants still hold.
+- **Only once validate.py exits 0 AND the judgment gates pass**, you may run the OPTIONAL SKILL step 7 engineering polish (only if the user asks
+  or `skill-creator` is available). Take the regression baseline BEFORE polishing:
+  `python3 "$SKILL/scripts/validate.py" --id <id> --snapshot` (hashes `mechanics.md`, `state.seed.json`,
+  the `world/ characters/ story/` trees and the SKILL.md `name`). A `skill-creator` subagent then polishes the
+  baked skill's *engineering surface only* (frontmatter, `description`/trigger, structure) — never the frozen
+  game content or `mechanics.md`'s meaning. Afterwards run
+  `python3 "$SKILL/scripts/validate.py" --id <id> --check-snapshot`: it re-runs every check and FAILs with
+  `snapshot-unchanged` listing anything that moved, which confirms `/<id>`, the engine and the hardcoded
+  invariants still hold.
 - Tell the user: play it by typing **`/<id>`** (first run = New Game). To retire it, just delete
   `.claude/skills/<id>/` (and optionally `saves/<id>/`).

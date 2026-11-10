@@ -11,10 +11,10 @@ keywords, one-line hint, and whether it's public. Full text lives in `world/lore
 ```markdown
 | id | title | keywords | hint | public |
 |----|-------|----------|------|--------|
-| spirit-tongue | The Spirit Tongue | spirit tongue, 言靈, spell, magic, chant | The lost language of the spirits | yes |
-| the-great-silence | The Great Silence | great silence, fading, the seal, why magic | Why magic is dying; central mystery | no |
+| old-harbor | The Old Harbor | old harbor, 舊港, docks, tide gate | The sunken district under the city | yes |
+| the-drowned-bell | The Drowned Bell | drowned bell, 沉鐘, the toll, why the tide rises | Why the tide keeps rising; central mystery | no |
 ```
-- `keywords`: if the player input, current scene, or NPC dialogue hits one, `Read world/lore/<id>.md`
+- `keywords`: include every language a player might type (as above: English and 中文). If the player input, current scene, or NPC dialogue hits one, `Read world/lore/<id>.md`
   for this turn.
 - `public = yes`: common knowledge; may be referenced from turn one.
 - `public = no`: hidden; reveal through exploration/dialogue/events, then unlock to the codex.
@@ -28,9 +28,11 @@ keywords, one-line hint, and whether it's public. Full text lives in `world/lore
 
 ## Codex unlock (the reward for exploring)
 When the player **first reveals** a hidden lore (an NPC says it, a document is found, it's witnessed):
-1. Run `python3 $SKILL/engine/scripts/codex.py --game <id> --unlock <lore-id> "<player-facing title>"`.
-2. The script writes it into `saves/<id>/codex.md` (if new) and reports `newly_unlocked: true/false`.
-3. If newly unlocked, add a small after-narration cue, e.g. `*（📖 圖鑑新增：The Great Silence）*`.
+1. Normal path: add it to the turn-end call's `unlock` list —
+   `turn.py … {"unlock":[{"id":"<lore-id>","title":"<player-facing title>"}], …}`.
+   (Manual alternative: `python3 $SKILL/engine/scripts/codex.py --game <id> --unlock <lore-id> "<title>"`.)
+2. It writes into `saves/<id>/codex.md` (if new); `turn.py` reports `newly_unlocked: [ids]`, codex.py `true/false`.
+3. If newly unlocked, add a small after-narration cue, e.g. `*(📖 Codex updated: The Drowned Bell)*` — written in the game's system language.
 4. The player can review the codex anytime by asking OOC via `[god]` (e.g. `[god codex]`).
 
 What's written to codex.md is the **player-known version** (what he understood), not necessarily the

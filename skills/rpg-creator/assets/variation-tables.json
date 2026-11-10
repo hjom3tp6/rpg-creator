@@ -1,0 +1,189 @@
+{
+  "_comment": "Design-variation tables read by scripts/roll.py. Each axis maps value-id -> short description; ids are what a game's `## Design DNA` block records (`- axis: id`). `pick` = how many distinct values one combo draws (default 1). `structure` ids MUST match story-structures/<id>.md. `high_impact` axes are the ones --avoid-recent steers away from when existing games already used them. `incompatible` lists value pairs (`axis=id`) that never appear together in one combo.",
+  "high_impact": ["structure", "opposition", "ending", "setting"],
+  "axes": {
+    "structure": {
+      "values": {
+        "conspiracy-mystery": "pull one thread, uncover a hidden web; a dated deadline closes in",
+        "heist": "assemble a crew, plan the job, watch the plan break, improvise",
+        "siege-survival": "hold one place while resources run out; hard allocations",
+        "political-intrigue": "factions trade favors and secrets toward a scheduled decision",
+        "road-journey": "a chain of waystations between here and there changes the traveler",
+        "time-loop": "one stretch of time repeats; only the protagonist remembers",
+        "tournament-ascent": "an underdog climbs a bracket of admirable rivals",
+        "doomed-cause": "a band commits to a cause that cannot fully win; meaning over outcome",
+        "seasons-of-a-community": "slice of life through a year of seasons, projects and festivals",
+        "expedition-into-unknown": "a team pushes into an unmapped place and pays for every step",
+        "revenge": "work through a list of those responsible; each name costs a piece of the self"
+      }
+    },
+    "opposition": {
+      "values": {
+        "single-nemesis": "one person with a face, a reason, and a plan of their own",
+        "institution": "an order, company, church or state that grinds on without malice",
+        "rival-peer": "an equal who wants the same thing and is admirable about it",
+        "nature": "weather, terrain, the cold, the sea, a sickness: forces without intent",
+        "the-party-itself": "the protagonist's own side fractures: trust, loyalty, ambition",
+        "the-protagonists-past": "an old deed, debt or identity that keeps catching up",
+        "faction-web": "several sides, none purely villainous, each with a fair grievance",
+        "a-beloved-opponent": "someone the protagonist loves stands on the other side",
+        "the-unknown": "a presence or rule no one understands yet; it has patterns and moods",
+        "public-opinion": "rumor, reputation and the crowd's mood decide what is possible",
+        "time-and-decay": "things are ending on their own; the fight is over what remains",
+        "no-villain": "only circumstance and the characters' own wants pull against each other"
+      }
+    },
+    "ending": {
+      "values": {
+        "triumph-at-a-cost": "the goal is won, and something real is paid for it",
+        "bittersweet": "a fair outcome with an ache: someone or something is not coming back",
+        "pyrrhic": "the victory destroys much of what it was meant to protect",
+        "tragic-with-meaning": "it falls, but the fall says something and is remembered",
+        "open-question": "the last scene leaves one deliberate question for the player to hold",
+        "transformation": "the protagonist ends as someone, or something, new",
+        "reconciliation": "estranged people come back together; the wound is shared",
+        "escape": "leave it all behind for a different life",
+        "new-order": "the protagonist founds, inherits or reshapes the institution",
+        "quiet-continuity": "life goes on, richer; no grand finale, a full circle",
+        "sacrifice": "someone chooses to give themselves so others continue",
+        "branching-by-allegiance": "who the player sided with decides which of several endings lands"
+      }
+    },
+    "protagonist": {
+      "values": {
+        "newcomer": "an outsider arriving with no standing and fresh eyes",
+        "disgraced-veteran": "once great at something, now blamed for a failure",
+        "reluctant-heir": "inherits a role, a debt or a title they never wanted",
+        "ordinary-worker": "a tradesperson with a job to keep and a skill that matters",
+        "fugitive": "hunted for something done, or wrongly blamed for it",
+        "caretaker": "responsible for others who depend on them",
+        "impostor": "pretending to be someone they are not, and good at it",
+        "last-survivor": "the only one left of a group, place or tradition",
+        "apprentice": "learning a craft under someone with secrets",
+        "returning-home": "coming back after years away to a place that changed",
+        "ruler-out-of-depth": "holds authority without the experience to use it",
+        "hired-specialist": "a professional contracted for one job that becomes more"
+      }
+    },
+    "tone": {
+      "values": {
+        "grim-and-grounded": "consequences are heavy; violence and loss are real",
+        "warm-and-cozy": "low stakes, kind people, small comforts",
+        "wry-comedic": "absurdity and wit, with sincerity underneath",
+        "elegiac": "melancholy and beauty; things are passing",
+        "pulpy-adventure": "fast, bold, colorful; set pieces and narrow escapes",
+        "tense-paranoid": "trust is scarce; everyone might be lying",
+        "romantic": "longing, chemistry and grand gestures lead the story",
+        "eerie": "quiet wrongness, uncanny details, dread over gore",
+        "hopeful-heroic": "courage matters and good deeds ripple outward",
+        "satirical": "the world's systems are shown up through exaggeration",
+        "contemplative": "slow, observant, philosophical; small moments carry weight",
+        "operatic": "big emotions, grand betrayals, declarations under storms"
+      }
+    },
+    "setting": {
+      "values": {
+        "high-fantasy": "D&D-style sword-and-sorcery: adventuring parties, dungeons, dragons, guilds",
+        "low-fantasy": "muddy, local, rare and costly magic; politics and weather matter more",
+        "near-future-city": "a dense city a few decades ahead: tech, debt, surveillance, neon",
+        "far-future-space": "ships, stations and colonies light-years apart",
+        "post-collapse": "the old world ended; scavenging, rebuilding, new customs",
+        "invented-early-modern": "an invented age of sail, printing presses, guilds and empires",
+        "present-day": "the world as it is now, with one hidden layer or none",
+        "mythic-bronze-age": "gods walk close; heroes, oracles and city-states",
+        "gaslamp-industrial": "smoke, steam, factories, spiritualism and labor unrest",
+        "drowned-world": "an ocean planet or flooded land; boats, reefs, sunken cities",
+        "desert-caravans": "oases, trade routes, sandstorms and wandering markets",
+        "sky-islands": "floating islands linked by airships, bridges and winds",
+        "martial-arts-world": "sects, masters, codes of honor and rival schools",
+        "small-town-uncanny": "a quiet town where something is slightly wrong",
+        "afterlife-or-dream": "a realm of the dead, of dreams, or between"
+      }
+    },
+    "drives": {
+      "pick": 3,
+      "values": {
+        "gap": "a public mask hiding a very different inner self",
+        "debt": "owes something (money, a life, a favor) and it shapes every choice",
+        "vow": "bound by a promise that is getting harder to keep",
+        "faith": "believes in something that is being tested",
+        "rivalry": "defined against someone they must equal or surpass",
+        "mentorship": "teaching or being taught; the lesson goes both ways",
+        "guilt": "carries a wrong they did and tries to balance it",
+        "ambition": "wants to rise and is willing to pay for it",
+        "duty": "bound to a role or people that outranks their own wishes",
+        "grief": "mourning someone, and the mourning steers them",
+        "curiosity": "must know, even when knowing costs",
+        "belonging": "wants a place and people to call home",
+        "freedom": "wants out of a cage: a role, a contract, a destiny",
+        "protection": "will keep someone safe at any price"
+      }
+    },
+    "relationship": {
+      "values": {
+        "romance": "a love story at the center (activate the romance module)",
+        "found-family": "strangers who become each other's home",
+        "rivalry": "two equals who sharpen and provoke each other",
+        "mentor-student": "an older hand and a learner, both adults, each changing the other",
+        "siblings": "adult siblings bound by history and old quarrels",
+        "comrades-in-arms": "people who have fought side by side and owe each other",
+        "employer-employee": "a boss and a worker whose roles bend under pressure",
+        "uneasy-alliance": "former enemies forced to cooperate",
+        "old-friends-apart": "friends who drifted and are thrown back together",
+        "partners": "professional partners: detectives, traders, a two-person crew",
+        "parent-and-adult-child": "a parent and their grown child, rebuilding or breaking",
+        "protector-and-charge": "one adult sworn or hired to keep another adult safe"
+      }
+    },
+    "scale": {
+      "values": {
+        "intimate": "one house, one ship, one room's worth of people",
+        "personal-circle": "a family, a crew, a handful of lives",
+        "neighborhood": "a street, a village, a market quarter",
+        "single-city": "one city and its districts",
+        "regional": "a province, a coastline, a valley of towns",
+        "national": "a kingdom, nation or federation",
+        "world": "the fate of the whole world or civilization",
+        "cosmic": "gods, stars, the nature of reality itself"
+      }
+    },
+    "twist": {
+      "values": {
+        "none": "play it straight; no extra constraint",
+        "cannot-lie": "the protagonist cannot speak a falsehood",
+        "unreliable-ally": "one trusted companion is not who they claim, from the very first scene",
+        "begins-at-the-end": "open with the final scene, then play how it came to that",
+        "power-has-a-price": "every use of the central power or tech costs something visible",
+        "opponent-is-right": "the opposition is right about one important thing",
+        "famous-for-a-lie": "the protagonist is celebrated for something they did not do",
+        "the-map-is-wrong": "a basic fact everyone believes about the world is false",
+        "shrinking-world": "the playable world gets smaller as the story goes on",
+        "one-shared-body": "two minds share one body, or one mind is split between two",
+        "letters-home": "each phase ends with a letter the protagonist writes to someone absent",
+        "no-violence-solves-it": "the central problem cannot be fixed by force",
+        "a-companion-creature": "an animal or creature companion is central to the story"
+      }
+    }
+  },
+  "incompatible": [
+    ["structure=seasons-of-a-community", "tone=tense-paranoid"],
+    ["structure=seasons-of-a-community", "scale=cosmic"],
+    ["structure=seasons-of-a-community", "scale=world"],
+    ["structure=seasons-of-a-community", "ending=pyrrhic"],
+    ["structure=seasons-of-a-community", "opposition=single-nemesis"],
+    ["structure=doomed-cause", "ending=quiet-continuity"],
+    ["structure=doomed-cause", "tone=warm-and-cozy"],
+    ["structure=revenge", "opposition=no-villain"],
+    ["structure=revenge", "tone=warm-and-cozy"],
+    ["structure=heist", "opposition=nature"],
+    ["structure=political-intrigue", "scale=intimate"],
+    ["structure=political-intrigue", "opposition=nature"],
+    ["structure=expedition-into-unknown", "scale=intimate"],
+    ["structure=tournament-ascent", "scale=intimate"],
+    ["structure=time-loop", "twist=begins-at-the-end"],
+    ["tone=warm-and-cozy", "ending=tragic-with-meaning"],
+    ["tone=warm-and-cozy", "ending=pyrrhic"],
+    ["tone=warm-and-cozy", "opposition=time-and-decay"],
+    ["scale=intimate", "ending=new-order"]
+  ]
+}

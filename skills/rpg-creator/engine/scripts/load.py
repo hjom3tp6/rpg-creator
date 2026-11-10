@@ -22,36 +22,34 @@ single --key) only when you need a cold field — an OOC `[god]` inspect query, 
 drift check that needs the ledger, etc. The file on disk is unchanged; this only trims what
 you READ. (Fix A — the hot/cold read split.)
 
---root defaults to the cwd (project root). --game selects the save; if omitted
-it is read from <root>/games/ACTIVE. State lives at <root>/saves/<game>/state.json.
+--root defaults to the cwd (project root). --game (required) selects the save; state lives at
+<root>/saves/<game>/state.json.
+
+Cold fields: built-in defaults cover the standard blocks (relationship notes/suspects/revealed,
+drift ledger/pending_seeds, goals mid/long, player description/persona_file). A game can declare
+extra cold fields with an optional top-level `_cold` list of dotted paths in its state, e.g.
+["red_tape.history", "casting.history"]; the hot view drops them (lists are
+replaced by `<field>_count`).
 """
 import argparse
+import copy
 import json
 import os
 import sys
 
-# Cold fields trimmed from the --hot view (they are prose / history / static
-# persona that a normal turn does not need; fetch with --key when required).
-COLD_REL_FIELDS = ("notes", "suspects", "revealed")   # per-character relationship prose
-COLD_DRIFT_FIELDS = ("ledger", "pending_seeds")        # drift history/queue (read on a drift check)
-COLD_GOAL_FIELDS = ("mid", "long")                     # keep short goals hot; mid/long summarized
-COLD_PLAYER_FIELDS = ("description", "persona_file")   # static persona (also in characters/player.md)
-COLD_SPIRIT_FIELDS = ("notable_castings",)             # casting prose log
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import saves_dir  # noqa: E402
+
+# Cold fields trimmed from the --hot view (prose / history / static persona a normal turn does not
+# need; fetch with --key when required). Per-character relationship prose is trimmed inside the
+# present-characters projection; everything else is a dotted path, like a game's own `_cold` list.
+COLD_REL_FIELDS = ("notes", "suspects", "revealed")
+DEFAULT_COLD = ("drift.ledger", "drift.pending_seeds",   # drift history/queue (read on a drift check)
+                "goals.mid", "goals.long",               # short goals stay hot
+                "player.description", "player.persona_file")  # static persona (also characters/player.md)
 
 
-def saves_dir(root: str, game) -> str:
-    """Resolve the per-game saves directory (shared by all engine scripts)."""
-    if not game:
-        active = os.path.join(root, "games", "ACTIVE")
-        if os.path.exists(active):
-            with open(active, encoding="utf-8") as f:
-                game = f.read().strip()
-    if game:
-        return os.path.join(root, "saves", game)
-    return os.path.join(root, "saves")  # legacy single-game layout
-
-
-def state_path(root: str, game) -> str:
+def state_path(root: str, game: str) -> str:
     return os.path.join(saves_dir(root, game), "state.json")
 
 
@@ -65,12 +63,27 @@ def _strip_comments(obj):
     return obj
 
 
+def _drop_path(out: dict, dotpath: str) -> None:
+    """Remove a dotted path from the (already copied) hot view; lists leave `<field>_count`."""
+    parts = dotpath.split(".")
+    cur = out
+    for p in parts[:-1]:
+        cur = cur.get(p) if isinstance(cur, dict) else None
+        if cur is None:
+            return
+    if not isinstance(cur, dict) or parts[-1] not in cur:
+        return
+    val = cur.pop(parts[-1])
+    if isinstance(val, list):
+        cur[parts[-1] + "_count"] = len(val)
+
+
 def hot_view(data: dict) -> dict:
     """Project the full state down to the volatile core needed each turn.
 
-    Generic across cartridges: it keys off `scene.present_characters` and a few
-    well-known cold field names (above). Unknown top-level keys pass through, so
-    a cartridge's custom small state still shows; only known heavy prose is cut.
+    Generic across games: `relationships` is projected to scene.present_characters (cold prose
+    fields dropped), DEFAULT_COLD paths are dropped, and so are the dotted paths in the state's
+    optional top-level `_cold` list. Everything else passes through unchanged.
     """
     present = set((data.get("scene") or {}).get("present_characters") or [])
     out = {"_view": "hot",
@@ -90,28 +103,14 @@ def hot_view(data: dict) -> dict:
             absent = [c for c in val if c not in present]
             if absent:
                 out["_relationships_offstage"] = absent  # names only; --key to load one
-        elif key == "drift" and isinstance(val, dict):
-            slim = {k: v for k, v in val.items() if k not in COLD_DRIFT_FIELDS}
-            for f in COLD_DRIFT_FIELDS:
-                if isinstance(val.get(f), list):
-                    slim[f + "_count"] = len(val[f])
-            out[key] = slim
-        elif key == "goals" and isinstance(val, dict):
-            slim = {k: v for k, v in val.items() if k not in COLD_GOAL_FIELDS}
-            for f in COLD_GOAL_FIELDS:
-                if isinstance(val.get(f), list):
-                    slim[f + "_count"] = len(val[f])
-            out[key] = slim
-        elif key == "player" and isinstance(val, dict):
-            out[key] = {k: v for k, v in val.items() if k not in COLD_PLAYER_FIELDS}
-        elif key == "spirit_tongue" and isinstance(val, dict):
-            slim = {k: v for k, v in val.items() if k not in COLD_SPIRIT_FIELDS}
-            for f in COLD_SPIRIT_FIELDS:
-                if isinstance(val.get(f), list):
-                    slim[f + "_count"] = len(val[f])
-            out[key] = slim
         else:
             out[key] = val
+
+    out = copy.deepcopy(out)
+    declared = data.get("_cold")
+    extra = [p for p in declared if isinstance(p, str) and p] if isinstance(declared, list) else []
+    for path in (*DEFAULT_COLD, *extra):
+        _drop_path(out, path)
     return _strip_comments(out)
 
 
@@ -135,8 +134,7 @@ def get_key(data, dotpath: str):
 def main() -> int:
     ap = argparse.ArgumentParser(description="Load game state.")
     ap.add_argument("--root", default=os.getcwd(), help="project root")
-    ap.add_argument("--game", default=None,
-                    help="cartridge id (else read from games/ACTIVE)")
+    ap.add_argument("--game", required=True, help="game id (the baked skill id)")
     ap.add_argument("--hot", action="store_true",
                     help="print only the volatile per-turn core (cheap)")
     ap.add_argument("--key", default=None,

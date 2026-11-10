@@ -15,9 +15,15 @@ it just runs.
 - **`rpg-creator` skill** — the authoring + compiling tool.
 - Character cards shaped like **SillyTavern V2** cards (minus the image), split into **主角
   (protagonist)** and **配角 (supporting cast)**.
-- A bundled engine (`save.py` / `load.py` / `checkpoint.py` / `codex.py` / `rotate_log.py`) copied into
+- A bundled engine (`turn.py` / `save.py` / `load.py` / `checkpoint.py` / `codex.py` / `rotate_log.py`) copied into
   every game so it has no shared dependency.
 - A module library (`romance`, `magic-potency`, `language-coaching`, `drift`) you can mix per game.
+- A **story-structure library** (`story-structures/`: conspiracy mystery, heist, siege, political
+  intrigue, road journey, time loop, tournament, doomed cause, seasons of a community, expedition,
+  revenge) — each with its own phases, pressure, opposition, endings and cast pattern.
+- **`roll.py`** — rolls genuinely random design combos (structure, opposition, ending, setting, tone,
+  character drives, central relationship, scale, a twist) from `assets/variation-tables.json`, steering
+  away from what your existing games already used, so every new game starts somewhere different.
 
 ## Install
 

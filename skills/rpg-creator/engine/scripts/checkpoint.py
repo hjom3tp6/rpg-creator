@@ -28,58 +28,40 @@ file is left untouched):
     <!-- /rpg:active-game -->
 """
 import argparse
-import datetime
+import json
 import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import atomic_write, read_text, saves_dir  # noqa: E402
 
 BEGIN = "<!-- rpg:active-game -->"
 END = "<!-- /rpg:active-game -->"
 
 
-def saves_dir(root: str, game) -> str:
-    """Resolve the per-game saves directory (shared by all engine scripts)."""
-    if not game:
-        active = os.path.join(root, "games", "ACTIVE")
-        if os.path.exists(active):
-            with open(active, encoding="utf-8") as f:
-                game = f.read().strip()
-    if game:
-        return os.path.join(root, "saves", game)
-    return os.path.join(root, "saves")  # legacy single-game layout
-
-
-def write_recap(root: str, game, body: str) -> str:
+def write_recap(root: str, game: str, body: str) -> str:
     path = os.path.join(saves_dir(root, game), "recap.md")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(body if body.endswith("\n") else body + "\n")
-    os.replace(tmp, path)
+    atomic_write(path, body if body.endswith("\n") else body + "\n")
     return path
 
 
-def update_pointer(root: str, game, title, resume_cmd=None) -> str:
-    """Replace (or insert) the managed block in <root>/CLAUDE.md.
+def sync_pointer(root: str, game: str, title, resume_cmd=None):
+    """Like update_pointer, but skips the write when nothing changed.
 
-    resume_cmd is the slash command that resumes this game (e.g. "/spirit-tongue"
-    for a baked game skill). Defaults to "/rpg" for the legacy generic engine.
+    Returns (path, changed). The block carries no timestamp, so an unchanged
+    game/title/resume command means CLAUDE.md is left untouched.
     """
     path = os.path.join(root, "CLAUDE.md")
-    label = title or game or "(unknown)"
-    gid = game or "?"
-    cmd = resume_cmd or "/rpg"
-    stamp = datetime.datetime.now().isoformat(timespec="minutes")
+    label = title or game
+    cmd = resume_cmd or f"/{game}"
     block = (
         f"{BEGIN}\n"
-        f"🎮 RPG 進行中：**{label}**（`{gid}`，更新 {stamp}）。\n"
-        f"輸入 `{cmd}` 即可從 `saves/{gid}/recap.md` 立即接續這局。\n"
+        f"🎮 RPG in progress: **{label}** (`{game}`). "
+        f"Type `{cmd}` to resume from `saves/{game}/recap.md`.\n"
         f"{END}"
     )
 
-    text = ""
-    if os.path.exists(path):
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
+    text = read_text(path)
 
     if BEGIN in text and END in text:
         pre = text[: text.index(BEGIN)]
@@ -90,11 +72,18 @@ def update_pointer(root: str, game, title, resume_cmd=None) -> str:
             "\n" if text.endswith("\n") else "\n\n")
         new = text + sep + block + "\n"
 
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(new)
-    os.replace(tmp, path)
-    return path
+    if new == text and os.path.exists(path):
+        return path, False
+    atomic_write(path, new)
+    return path, True
+
+
+def update_pointer(root: str, game: str, title, resume_cmd=None) -> str:
+    """Replace (or insert) the managed block in <root>/CLAUDE.md.
+
+    resume_cmd is the slash command that resumes this game; defaults to "/<game>".
+    """
+    return sync_pointer(root, game, title, resume_cmd)[0]
 
 
 def clear_pointer(root: str) -> str:
@@ -102,33 +91,29 @@ def clear_pointer(root: str) -> str:
     path = os.path.join(root, "CLAUDE.md")
     if not os.path.exists(path):
         return path
-    with open(path, encoding="utf-8") as f:
-        text = f.read()
+    text = read_text(path)
     if BEGIN in text and END in text:
         pre = text[: text.index(BEGIN)].rstrip("\n")
         post = text[text.index(END) + len(END):].lstrip("\n")
         new = (pre + "\n\n" + post).strip("\n")
         new = new + "\n" if new else ""
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(new)
+        atomic_write(path, new)
     return path
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Write recap + CLAUDE.md pointer.")
     ap.add_argument("--root", default=os.getcwd(), help="project root")
-    ap.add_argument("--game", default=None,
-                    help="cartridge id (else read from games/ACTIVE)")
+    ap.add_argument("--game", required=True, help="game id (the baked skill id)")
     ap.add_argument("--title", default=None, help="player-facing game title")
     ap.add_argument("--resume-cmd", default=None,
-                    help="slash command that resumes this game (e.g. /spirit-tongue)")
+                    help="slash command that resumes this game (default: /<game>)")
     ap.add_argument("--recap", default=None,
                     help="recap markdown (otherwise read from stdin)")
     ap.add_argument("--clear-pointer", action="store_true",
                     help="remove the CLAUDE.md block instead of writing")
     args = ap.parse_args()
 
-    import json
     if args.clear_pointer:
         p = clear_pointer(args.root)
         print(json.dumps({"_status": "pointer_cleared", "claude_md": p},

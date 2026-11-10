@@ -28,7 +28,7 @@ by how much the turn diverged from the expected, on-rails path:
 |---|---|
 | On-rails: follows the obvious hook, low consequence | +0–2 |
 | A real choice with consequences (a flag worth bringing back) | +3–6 |
-| Touches a faction's / heroine's **core** (loyalty, secret, power, life) | +6–12 |
+| Touches a faction's / key character's **core** (loyalty, secret, power, life) | +6–12 |
 | Outsized outcome — a `Fortune's Favor` crit, a catastrophic fail, a death, a public miracle | +10–20 |
 | Directly defies or dismantles a planned beat ("you weren't supposed to be able to do that") | +12–25 |
 | A `[god]` instruction that rewrites a fact or shifts the tone | set by you, often large |
@@ -42,7 +42,7 @@ Run a drift check (§3) when **any** of these is true — don't check every turn
 
 - **Threshold crossing** — `drift.pressure ≥ drift.threshold` (default 60). The world has stored
   enough divergence that it *must* express it.
-- **Structural node** — an act/chapter boundary, a major `clock.deadline` resolving, a heroine route
+- **Structural node** — a phase/chapter boundary, a major `clock.deadline` resolving, a relationship
   locking or breaking, a faction toppling, a central reveal landing, a long arc closing. These are
   the natural seams where the future re-forms.
 - **Catalyst turn** — a single turn so consequential it can't be absorbed (a key NPC dies, a secret
@@ -81,10 +81,12 @@ This is the heart of the mechanic. When a check fires, **silently** do this befo
 - **Allegiance** — an ally's orders change; a protector is reassigned to hunt him; an enemy defects.
 - **Power** — who holds the key object / territory / secret shifts; a faction rises or breaks.
 - **The mystery** — the central question reframes; a "truth" turns half-wrong; a new layer opens
-  (then `codex.py --unlock` only what's *revealed in fiction*, not the whole twist).
-- **A heroine's line** — her situation, faction, or feeling reroutes (never her core voice; never
-  force the romance — see `romance`).
-- **The clock** — a deadline accelerates, dissolves, or a new one ignites (`drama-craft` §4).
+  (then unlock only what's *revealed in fiction*, not the whole twist — normally via the `unlock`
+  field of the turn-end `engine/scripts/turn.py` call; `codex.py --unlock` still works).
+- **A key character's line** — their situation, faction, or feeling reroutes (never their core
+  voice; never force a romance — see `romance` if active).
+- **The pressure** — a deadline accelerates, a resource collapses, a new pressure ignites
+  (`drama-craft` §4).
 - **The world itself** — a place, custom, or rule of the setting is permanently altered by his deeds.
 
 ## 4. Magnitude bands
@@ -114,8 +116,8 @@ Rules for the ledger:
 - **No free retcons.** Drift **reframes** the future, it doesn't rewrite established hard facts the
   player witnessed. If a fault line seems to need a past fact changed, instead reveal it was *always*
   more complicated (a reframe), and unlock that to codex.
-- **Pay off the ledger.** Treat standing entries like Chekhov's guns — a faction you rerouted in Act I
-  should *return* changed in Act III (`drama-craft` §7, §12).
+- **Pay off the ledger.** Treat standing entries like Chekhov's guns — a faction you rerouted early
+  should *return* changed in a later phase (`drama-craft` §7, §12).
 
 ## 6. Surfacing — felt, rarely announced
 
@@ -138,9 +140,10 @@ Rules for the ledger:
   player a live thread to pull (`fail-forward`).
 - **It escalates, it doesn't reset.** Stakes ratchet across drifts; the world doesn't sneak back to its
   baseline (`drama-craft` §3).
-- **Cartridge spine is the floor, not the rails.** Honor the cartridge's premise, tone, and the
-  non-negotiables in `story/main-arc.md` / `game.md` (e.g. the Hollowing keeps creeping, English stays
-  in the spotlight). Drift bends *which way* the story goes, not *what kind of story* it is.
+- **The game's spine is the floor, not the rails.** Honor the game's premise, tone, story structure
+  (its Design DNA in `story/main-arc.md`), and the non-negotiables in `mechanics.md` (e.g. the core
+  threat keeps advancing, the language policy holds). Drift bends *which way* the story goes, not
+  *what kind of story* it is.
 - **God-mode `[ ]` outranks drift.** If the player commands the world a certain way, that wins.
 
 ## 8. State block (`state.json`)

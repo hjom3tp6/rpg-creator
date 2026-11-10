@@ -9,7 +9,7 @@
      Volatile state (location, inventory, stats, relationships) lives in saves/<id>/state.json, NOT here.
      The protagonist is an adult (18+). -->
 
-# {{Player default name}} — {{epithet, e.g. "the washed-up summoner"}}
+# {{Player default name}} — {{epithet, e.g. "the washed-up courier"}}
 
 - **id:** player
 - **Role:** {{who the player is in this world — their station, job, reputation}}
@@ -25,12 +25,11 @@
 {{1–2 paragraphs: history that shaped them and the wound/legacy the story will press on.}}
 
 ## Personality & Voice  <!-- ST: personality — traits + how their narration/dialogue should read -->
-{{Temperament in a few adjectives, plus the register of their inner voice (dry, earnest, horny-but-
-hiding-it…) so the GM keeps the POV consistent.}}
+{{Temperament in a few adjectives, plus the register of their inner voice (dry, earnest, guarded…) so the GM keeps the POV consistent.}}
 
 ## Wants & Drive
 - **Stated goal:** {{what the player says they're after}}
-- **True drive:** {{the deeper need the arc satisfies — may differ from the stated goal}}
+- **True drive:** {{one from the drive palette (debt, vow, ambition, duty, gap…) — the deeper need the arc satisfies; may differ from the stated goal}}
 - **Flaw / wound:** {{the thing that holds them back; what growth looks like}}
 
 ## Starting Situation  <!-- ST: scenario — the world-state at New Game, the opening hook -->
